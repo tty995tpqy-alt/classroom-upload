@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课堂作品上传系统</title>
+    <style>
+        :root {
+            --bg: #f0f4f8;
+            --card-bg: #ffffff;
+            --primary: #4A6CF7;
+            --primary-dark: #3651d5;
+            --student-color: #F59E0B;
+            --student-dark: #D97706;
+            --teacher-color: #3B82F6;
+            --teacher-dark: #2563EB;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --text-light: #94a3b8;
+            --border: #e2e8f0;
+            --success: #10B981;
+            --danger: #EF4444;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.10), 0 4px 10px rgba(0, 0, 0, 0.06);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 8px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: #e8edf2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 12px;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 手机模拟容器 */
+        .app-container {
+            width: 100%;
+            max-width: 430px;
+            min-height: 92vh;
+            max-height: 95vh;
+            background: var(--bg);
+            border-radius: 24px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        @media (max-width: 460px) {
+            .app-container {
+                max-width: 100%;
+                min-height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+                box-shadow: none;
+            }
+            body {
+                padding: 0;
+            }
+        }
+
+        /* 状态栏模拟 */
+        .status-bar {
+            height: 36px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            font-size: 12px;
+            color: var(--text);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .status-bar .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--success);
+            margin-right: 8px;
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        .main-content::-webkit-scrollbar {
+            width: 3px;
+        }
+        .main-content::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        /* 底部导航条模拟 */
+        .nav-bar {
+            height: 50px;
+            background: #fff;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            flex-shrink: 0;
+            font-size: 11px;
+            color: var(--text-light);
+            letter-spacing: 0.3px;
+        }
+        .nav-bar .nav-indicator {
+            width: 40px;
+            height: 4px;
+            background: #d1d5db;
+            border-radius: 2px;
+            margin: 0 auto;
+        }
+
+        /* 页面容器 */
+        .page {
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+            animation: fadeSlideIn 0.35s ease;
+        }
+        .page.active {
+            display: flex;
+        }
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 卡片 */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .card-sm {
+            padding: 16px;
+            border-radius: var(--radius-sm);
+        }
+
+        /* 标题 */
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        .page-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: -6px;
+        }
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 按钮 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 13px 24px;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            letter-spacing: 0.3px;
+            transition: all var(--transition);
+            text-decoration: none;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            font-family: var(--font-family);
+        }
+        .btn:active {
+            transform: scale(0.96);
+            opacity: 0.9;
+        }
+        .btn-student {
+            background: linear-gradient(135deg, #FBBF24, #F59E0B);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+        }
+        .btn-student:hover {
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+            transform: translateY(-1px);
+        }
+        .btn-teacher {
+            background: linear-gradient(135deg, #60A5FA, #3B82F6);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+        }
+        .btn-teacher:hover {
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
+            transform: translateY(-1px);
+        }
+        .btn-outline {
+            background: #fff;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        .btn-outline:hover {
+            background: #f8faff;
+        }
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 20px;
+            width: auto;
+        }
+        .btn-danger {
+            background: #fff;
+            color: var(--danger);
+            border: 2px solid var(--danger);
+        }
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* 输入框 */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .input-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: 0.3px;
+        }
+        .input-group input,
+        .input-group textarea,
+        .input-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xs);
+            font-size: 15px;
+            font-family: var(--font-family);
+            transition: all var(--transition);
+            background: #fafbfc;
+            color: var(--text);
+            resize: vertical;
+            outline: none;
+        }
+        .input-group input:focus,
+        .input-group textarea:focus,
+        .input-group select:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(74, 108, 247, 0.08);
+        }
+        .input-group textarea {
+            min-height: 90px;
+            line-height: 1.6;
+        }
+        .input-hint {
+            font-size: 11px;
+            color: var(--text-light);
+        }
+
+        /* 首页大图标 */
+        .hero-icon {
+            font-size: 64px;
+            text-align: center;
+            animation: float 3s ease-in-out infinite;
+            margin: 8px 0;
+        }
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-12px);
+            }
+        }
+        .hero-icon-s {
+            font-size: 50px;
+            text-align: center;
+            margin: 4px 0;
+        }
+
+        /* 图片上传区 */
+        .upload-zone {
+            border: 2px dashed #d1d5db;
+            border-radius: var(--radius-sm);
+            padding: 28px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: #fafbfc;
+            position: relative;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: #f8faff;
+            box-shadow: 0 0 0 6px rgba(74, 108, 247, 0.04);
+        }
+        .upload-zone.has-image {
+            border-color: var(--success);
+            border-style: solid;
+            background: #f9fdfb;
+            padding: 8px;
+        }
+        .upload-zone img {
+            max-width: 100%;
+            max-height: 240px;
+            border-radius: var(--radius-xs);
+            object-fit: contain;
+        }
+        .upload-zone .icon-upload {
+            font-size: 40px;
+            opacity: 0.6;
+        }
+        .upload-zone .upload-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .remove-image-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--danger);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            transition: all var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+        .remove-image-btn:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-120px);
+            background: #1e293b;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 9999;
+            letter-spacing: 0.3px;
+            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.success {
+            background: #059669;
+        }
+        .toast.error {
+            background: #dc2626;
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 9990;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+            padding: 20px;
+        }
+        .modal-overlay img {
+            max-width: 95vw;
+            max-height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            object-fit: contain;
+        }
+        .modal-overlay .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #fff;
+            font-size: 32px;
+            cursor: pointer;
+            z-index: 9991;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            transition: all var(--transition);
+        }
+        .modal-overlay .close-modal:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* 分组列表 */
+        .group-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .group-item {
+            background: #fff;
+            border-radius: var(--radius-sm);
+            padding: 16px 18px;
+            cursor: pointer;
+            transition: all var(--transition);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+        }
+        .group-item:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+            transform: translateX(2px);
+        }
+        .group-item:active {
+            transform: scale(0.98);
+        }
+        .group-item .group-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .group-item .group-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .group-item .group-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text);
+        }
+        .group-item .group-count {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .group-item .arrow {
+            color: var(--text-light);
+            font-size: 18px;
+            transition: transform var(--transition);
+        }
+        .group-item:hover .arrow {
+            transform: translateX(3px);
+            color: var(--primary);
+        }
+
+        /* 作品展示卡片 */
+        .submission-card {
+            background: #fff;
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition);
+        }
+        .submission-card:hover {
+            box-shadow: var(--shadow);
+        }
+        .submission-card .student-badge {
+            display: inline-block;
+            background: #EEF2FF;
+            color: #4F46E5;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .submission-card .description {
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.7;
+            margin: 8px 0;
+            padding: 10px 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+        }
+        .submission-card .submission-image {
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            max-height: 200px;
+            object-fit: cover;
+            transition: all var(--transition);
+            border: 1px solid #eee;
+        }
+        .submission-card .submission-image:hover {
+            opacity: 0.9;
+            box-shadow: var(--shadow);
+        }
+        .submission-card .time-tag {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 6px;
+        }
+        .comment-box {
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: #fffbeb;
+            border-radius: 8px;
+            border: 1px solid #fde68a;
+            font-size: 13px;
+            color: #92400e;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+        .comment-box .comment-icon {
+            flex-shrink: 0;
+        }
+        .teacher-comment-input {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        .teacher-comment-input input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            font-family: var(--font-family);
+            outline: none;
+            transition: all var(--transition);
+        }
+        .teacher-comment-input input:focus {
+            border-color: #F59E0B;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.06);
+        }
+
+        /* 徽章 */
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .badge-info {
+            background: #EFF6FF;
+            color: #3B82F6;
+        }
+        .badge-warning {
+            background: #FFFBEB;
+            color: #D97706;
+        }
+        .badge-success {
+            background: #ECFDF5;
+            color: #059669;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+        .empty-state .empty-icon {
+            font-size: 56px;
+            margin-bottom: 12px;
+            opacity: 0.7;
+        }
+        .empty-state p {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* 返回按钮 */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+            padding: 6px 4px;
+            border: none;
+            background: none;
+            letter-spacing: 0.3px;
+            transition: all var(--transition);
+            font-family: var(--font-family);
+            width: auto;
+        }
+        .back-btn:hover {
+            color: var(--primary-dark);
+            gap: 8px;
+        }
+
+        /* 首页特色卡片 */
+        .feature-card {
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            border: 2px solid transparent;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+        .feature-card.student-card {
+            border-color: #fde68a;
+            background: linear-gradient(180deg, #fffef9 0%, #fff 100%);
+        }
+        .feature-card.student-card:hover {
+            border-color: #F59E0B;
+        }
+        .feature-card.teacher-card {
+            border-color: #bfdbfe;
+            background: linear-gradient(180deg, #f9fbff 0%, #fff 100%);
+        }
+        .feature-card.teacher-card:hover {
+            border-color: #3B82F6;
+        }
+        .feature-card .feature-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+        .feature-card .feature-title {
+            font-weight: 700;
+            font-size: 17px;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .feature-card .feature-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        /* 高亮提示 */
+        .highlight-tip {
+            background: #fffef0;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            color: #92400e;
+            text-align: center;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 图片放大模态框 -->
+    <div class="modal-overlay" id="imageModal" style="display:none;" onclick="closeImageModal()">
+        <span class="close-modal" onclick="closeImageModal()">✕</span>
+        <img id="modalImage" src="" alt="放大查看" onclick="event.stopPropagation()">
+    </div>
+
+    <!-- 应用容器 -->
+    <div class="app-container">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <span class="dot"></span> 课堂作品管理系统
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content" id="mainContent">
+
+            <!-- ==================== 首页 ==================== -->
+            <div class="page active" id="page-home">
+                <div class="hero-icon">📚</div>
+                <h1 class="page-title">课堂作品上传</h1>
+                <p class="page-subtitle">学生提交作品 · 教师在线查看</p>
+
+                <div style="display:flex;flex-direction:column;gap:14px;margin-top:8px;">
+                    <!-- 学生入口 -->
+                    <div class="feature-card student-card" onclick="navigateTo('student-login')">
+                        <div class="feature-icon">🎒</div>
+                        <div class="feature-title">学生上传入口</div>
+                        <div class="feature-desc">输入学号，提交小组作品</div>
+                    </div>
+
+                    <!-- 教师入口 -->
+                    <div class="feature-card teacher-card" onclick="navigateTo('teacher-login')">
+                        <div class="feature-icon">👨‍🏫</div>
+                        <div class="feature-title">教师评价入口</div>
+                        <div class="feature-desc">查看各分组作品并给予评价</div>
+                    </div>
+                </div>
+
+                <div class="highlight-tip" style="margin-top:4px;">
+                    💡 提示：教师默认账号 <strong>admin</strong> / 密码 <strong>123456</strong>
+                </div>
+            </div>
+
+            <!-- ==================== 学生登录页 ==================== -->
+            <div class="page" id="page-student-login">
+                <button class="back-btn" onclick="navigateTo('home')">← 返回首页</button>
+                <div class="hero-icon-s">🎒</div>
+                <h2 class="page-title">学生登录</h2>
+                <p class="page-subtitle">请输入你的学号进入上传页面</p>
+                <div class="card">
+                    <div class="input-group">
+                        <label for="studentId">📋 学号</label>
+                        <input type="text" id="studentId" placeholder="请输入学号，如：20240101" autocomplete="off">
+                        <span class="input-hint">输入学号后点击登录，无需密码</span>
+                    </div>
+                    <button class="btn btn-student" onclick="studentLogin()" style="margin-top:14px;">
+                        🚀 进入上传页面
+                    </button>
+                </div>
+                <div class="highlight-tip">
+                    💡 如你之前已提交过作品，登录后将显示原内容并可修改
+                </div>
+            </div>
+
+            <!-- ==================== 学生上传页 ==================== -->
+            <div class="page" id="page-student-upload">
+                <button class="back-btn" onclick="navigateTo('home')">← 返回首页</button>
+                <div class="hero-icon-s">📝</div>
+                <h2 class="page-title">提交作品</h2>
+                <p class="page-subtitle" id="uploadStudentInfo">学号：—</p>
+                <div class="card">
+                    <div class="input-group">
+                        <label for="groupName">🏷️ 小组名称</label>
+                        <input list="groupList" id="groupName" placeholder="选择或输入小组名" autocomplete="off">
+                        <datalist id="groupList">
+                            <option value="第一组">
+                            <option value="第二组">
+                            <option value="第三组">
+                            <option value="第四组">
+                            <option value="第五组">
+                            <option value="第六组">
+                            <option value="第七组">
+                            <option value="第八组">
+                        </datalist>
+                        <span class="input-hint">可从列表选择，也可自行输入小组名</span>
+                    </div>
+                    <div class="input-group" style="margin-top:12px;">
+                        <label for="taskDesc">📄 任务一概述</label>
+                        <textarea id="taskDesc" placeholder="请描述你们的任务完成情况、思路与收获..."></textarea>
+                        <span class="input-hint">简要描述任务一的内容与成果</span>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px;">
+                            🖼️ 任务一图片上传
+                        </label>
+                        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                            <span class="icon-upload">📷</span>
+                            <span class="upload-text">点击此处上传图片</span>
+                            <span style="font-size:11px;color:#94a3b8;">支持 JPG/PNG，建议不超过 2MB</span>
+                            <input type="file" id="fileInput" accept="image/*" onchange="handleImageUpload(event)" style="display:none;">
+                        </div>
+                        <input type="file" id="fileInputHidden" accept="image/*" onchange="handleImageUpload(event)" style="display:none;">
+                    </div>
+                    <button class="btn btn-success" onclick="submitWork()" style="margin-top:16px;" id="submitBtn">
+                        ✅ 提交作品
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="clearCurrentSubmission()" style="margin-top:8px;width:100%;" id="clearBtn">
+                        🗑️ 清除当前提交记录
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================== 教师登录页 ==================== -->
+            <div class="page" id="page-teacher-login">
+                <button class="back-btn" onclick="navigateTo('home')">← 返回首页</button>
+                <div class="hero-icon-s">👨‍🏫</div>
+                <h2 class="page-title">教师登录</h2>
+                <p class="page-subtitle">请输入教师账号和密码</p>
+                <div class="card">
+                    <div class="input-group">
+                        <label for="teacherAccount">👤 账号</label>
+                        <input type="text" id="teacherAccount" placeholder="请输入教师账号" autocomplete="off">
+                    </div>
+                    <div class="input-group" style="margin-top:10px;">
+                        <label for="teacherPassword">🔒 密码</label>
+                        <input type="password" id="teacherPassword" placeholder="请输入密码">
+                    </div>
+                    <button class="btn btn-teacher" onclick="teacherLogin()" style="margin-top:14px;">
+                        🔑 登录管理面板
+                    </button>
+                </div>
+                <div class="highlight-tip">
+                    💡 默认账号：<strong>admin</strong> &nbsp;|&nbsp; 默认密码：<strong>123456</strong>
+                </div>
+            </div>
+
+            <!-- ==================== 教师面板页（分组列表） ==================== -->
+            <div class="page" id="page-teacher-dashboard">
+                <button class="back-btn" onclick="navigateTo('home')">← 返回首页</button>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <h2 class="page-title" style="text-align:left;">📋 分组作品列表</h2>
+                    <button class="btn btn-outline btn-sm" onclick="navigateTo('home')" style="width:auto;">退出登录</button>
+                </div>
+                <p class="page-subtitle" style="text-align:left;">点击分组查看该组学生作品</p>
+                <div class="group-list" id="groupListContainer">
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p>暂无学生提交作品</p>
+                    </div>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="resetAllData()" style="margin-top:8px;width:100%;">
+                    🔄 重置所有演示数据
+                </button>
+            </div>
+
+            <!-- ==================== 教师查看分组页 ==================== -->
+            <div class="page" id="page-teacher-group">
+                <button class="back-btn" onclick="navigateTo('teacher-dashboard')">← 返回分组列表</button>
+                <h2 class="page-title" id="groupDetailTitle">分组详情</h2>
+                <p class="page-subtitle" id="groupDetailSubtitle"></p>
+                <div id="groupSubmissionsContainer">
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p>该分组暂无作品</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部导航条 -->
+        <div class="nav-bar">
+            <span>📱</span> 课堂互动 · 作品展示平台 <span>✨</span>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 数据管理 ====================
+        const STORAGE_KEY = 'classroom_submissions_v2';
+        const TEACHER_ACCOUNT = 'admin';
+        const TEACHER_PASSWORD = '123456';
+
+        // 当前登录的学生学号
+        let currentStudentId = '';
+        // 当前查看的分组名
+        let currentViewGroup = '';
+        // 当前学生已上传的图片base64（用于预览）
+        let currentImageBase64 = '';
+
+        // 获取所有提交记录
+        function getSubmissions() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // 保存所有提交记录
+        function saveSubmissions(submissions) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(submissions));
+            } catch (e) {
+                showToast('存储空间不足，请清理旧数据', 'error');
+            }
+        }
+
+        // 根据学号查找提交记录
+        function findSubmissionByStudentId(studentId) {
+            const submissions = getSubmissions();
+            return submissions.find(s => s.studentId === studentId);
+        }
+
+        // 保存或更新提交记录
+        function upsertSubmission(submission) {
+            const submissions = getSubmissions();
+            const index = submissions.findIndex(s => s.studentId === submission.studentId);
+            if (index >= 0) {
+                // 更新现有记录，保留教师评价
+                submission.teacherComment = submissions[index].teacherComment || '';
+                submissions[index] = submission;
+            } else {
+                submissions.push(submission);
+            }
+            saveSubmissions(submissions);
+        }
+
+        // 删除某个学号的提交记录
+        function deleteSubmissionByStudentId(studentId) {
+            let submissions = getSubmissions();
+            submissions = submissions.filter(s => s.studentId !== studentId);
+            saveSubmissions(submissions);
+        }
+
+        // 获取所有分组名（去重排序）
+        function getAllGroups() {
+            const submissions = getSubmissions();
+            const groups = [...new Set(submissions.map(s => s.groupName).filter(Boolean))];
+            groups.sort((a, b) => a.localeCompare(b, 'zh'));
+            return groups;
+        }
+
+        // 获取某个分组的所有提交
+        function getSubmissionsByGroup(groupName) {
+            const submissions = getSubmissions();
+            return submissions.filter(s => s.groupName === groupName);
+        }
+
+        // ==================== 演示数据 ====================
+        function seedDemoData() {
+            const existing = getSubmissions();
+            if (existing.length > 0) return; // 已有数据则不再填充
+
+            const demos = [{
+                id: 'demo1',
+                studentId: '20240101',
+                groupName: '第一组',
+                task1Description: '我们小组完成了任务一的调研与分析。通过查阅资料和讨论，我们确定了项目方向，并绘制了初步的思维导图。在过程中，每位成员都积极参与，分工明确。我们使用了课堂上学到的分析方法，对案例进行了深入剖析。',
+                task1Image: '',
+                teacherComment: '',
+                timestamp: new Date(Date.now() - 3600000 * 5).toISOString()
+            }, {
+                id: 'demo2',
+                studentId: '20240102',
+                groupName: '第一组',
+                task1Description: '任务一我们主要进行了需求分析。通过小组头脑风暴，我们整理出了用户的核心需求，并制作了简单的原型草图。这次合作让我们更好地理解了团队协作的重要性。',
+                task1Image: '',
+                teacherComment: '分析得很到位，继续保持！',
+                timestamp: new Date(Date.now() - 3600000 * 3).toISOString()
+            }, {
+                id: 'demo3',
+                studentId: '20240105',
+                groupName: '第二组',
+                task1Description: '我们组完成了文献综述部分，搜集了超过20篇相关论文，并整理成了一份详细的综述报告。任务一让我们对课题背景有了全面的认识。',
+                task1Image: '',
+                teacherComment: '',
+                timestamp: new Date(Date.now() - 3600000 * 8).toISOString()
+            }, {
+                id: 'demo4',
+                studentId: '20240108',
+                groupName: '第三组',
+                task1Description: '第三组的任务一重点在于实验设计。我们设计了完整的实验方案，包括变量控制、数据收集方法和预期结果分析。方案已经过初步验证。',
+                task1Image: '',
+                teacherComment: '实验设计很有创意，期待后续结果。',
+                timestamp: new Date(Date.now() - 3600000 * 12).toISOString()
+            }];
+            saveSubmissions(demos);
+        }
+
+        // ==================== 页面导航 ====================
+        function navigateTo(pageName) {
+            // 隐藏所有页面
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(p => p.classList.remove('active'));
+
+            // 显示目标页面
+            const targetPage = document.getElementById('page-' + pageName);
+            if (targetPage) {
+                targetPage.classList.add('active');
+                // 滚动到顶部
+                document.getElementById('mainContent').scrollTop = 0;
+            }
+
+            // 页面切换时的额外处理
+            if (pageName === 'teacher-dashboard') {
+                renderGroupList();
+            }
+            if (pageName === 'student-upload') {
+                loadStudentUploadPage();
+            }
+            if (pageName === 'teacher-group') {
+                renderGroupDetail();
+            }
+            if (pageName === 'student-login') {
+                document.getElementById('studentId').value = '';
+                document.getElementById('studentId').focus();
+            }
+            if (pageName === 'teacher-login') {
+                document.getElementById('teacherAccount').value = '';
+                document.getElementById('teacherPassword').value = '';
+            }
+        }
+
+        // ==================== Toast 提示 ====================
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2200);
+        }
+
+        // ==================== 图片模态框 ====================
+        function openImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            const img = document.getElementById('modalImage');
+            img.src = src;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // ESC键关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeImageModal();
+            }
+        });
+
+        // ==================== 学生登录 ====================
+        function studentLogin() {
+            const studentId = document.getElementById('studentId').value.trim();
+            if (!studentId) {
+                showToast('请输入学号', 'error');
+                return;
+            }
+            currentStudentId = studentId;
+            navigateTo('student-upload');
+        }
+
+        // 加载学生上传页面
+        function loadStudentUploadPage() {
+            document.getElementById('uploadStudentInfo').textContent = '学号：' + currentStudentId;
+            const existing = findSubmissionByStudentId(currentStudentId);
+            if (existing) {
+                document.getElementById('groupName').value = existing.groupName || '';
+                document.getElementById('taskDesc').value = existing.task1Description || '';
+                currentImageBase64 = existing.task1Image || '';
+                if (existing.task1Image) {
+                    showImagePreview(existing.task1Image);
+                } else {
+                    resetUploadZone();
+                }
+                document.getElementById('submitBtn').textContent = '🔄 更新作品';
+                document.getElementById('clearBtn').style.display = 'block';
+            } else {
+                document.getElementById('groupName').value = '';
+                document.getElementById('taskDesc').value = '';
+                currentImageBase64 = '';
+                resetUploadZone();
+                document.getElementById('submitBtn').textContent = '✅ 提交作品';
+                document.getElementById('clearBtn').style.display = 'none';
+            }
+        }
+
+        // ==================== 图片上传处理 ====================
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // 检查文件大小（限制3MB）
+            if (file.size > 3 * 1024 * 1024) {
+                showToast('图片大小不能超过3MB，请压缩后重试', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            // 检查文件类型
+            if (!file.type.match(/^image\/(jpeg|png|gif|webp|bmp)$/)) {
+                showToast('请上传JPG、PNG、GIF或WebP格式的图片', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImageBase64 = e.target.result;
+                showImagePreview(currentImageBase64);
+            };
+            reader.onerror = function() {
+                showToast('图片读取失败，请重试', 'error');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showImagePreview(base64) {
+            const zone = document.getElementById('uploadZone');
+            zone.classList.add('has-image');
+            zone.innerHTML = `
+                        <img src="${base64}" alt="预览图片">
+                        <button class="remove-image-btn" onclick="removeImage(event)" title="移除图片">✕</button>
+                        <input type="file" id="fileInput" accept="image/*" onchange="handleImageUpload(event)" style="display:none;">
+                    `;
+        }
+
+        function resetUploadZone() {
+            const zone = document.getElementById('uploadZone');
+            zone.classList.remove('has-image');
+            zone.innerHTML = `
+                        <span class="icon-upload">📷</span>
+                        <span class="upload-text">点击此处上传图片</span>
+                        <span style="font-size:11px;color:#94a3b8;">支持 JPG/PNG，建议不超过 2MB</span>
+                        <input type="file" id="fileInput" accept="image/*" onchange="handleImageUpload(event)" style="display:none;">
+                    `;
+            currentImageBase64 = '';
+        }
+
+        function removeImage(event) {
+            event.stopPropagation();
+            currentImageBase64 = '';
+            resetUploadZone();
+        }
+
+        // 重新绑定上传区域的点击事件
+        document.getElementById('uploadZone').addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON') return; // 移除按钮不触发
+            const fileInput = this.querySelector('input[type="file"]');
+            if (fileInput) fileInput.click();
+        });
+
+        // ==================== 提交作品 ====================
+        function submitWork() {
+            const groupName = document.getElementById('groupName').value.trim();
+            const taskDesc = document.getElementById('taskDesc').value.trim();
+
+            if (!groupName) {
+                showToast('请输入小组名称', 'error');
+                document.getElementById('groupName').focus();
+                return;
+            }
+            if (!taskDesc) {
+                showToast('请填写任务一概述', 'error');
+                document.getElementById('taskDesc').focus();
+                return;
+            }
+            if (!currentImageBase64) {
+                showToast('请上传任务一图片', 'error');
+                return;
+            }
+
+            const submission = {
+                id: 'sub_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                studentId: currentStudentId,
+                groupName: groupName,
+                task1Description: taskDesc,
+                task1Image: currentImageBase64,
+                teacherComment: '',
+                timestamp: new Date().toISOString()
+            };
+
+            // 保留原有的教师评价
+            const existing = findSubmissionByStudentId(currentStudentId);
+            if (existing && existing.teacherComment) {
+                submission.teacherComment = existing.teacherComment;
+            }
+
+            upsertSubmission(submission);
+            showToast('作品提交成功！🎉', 'success');
+            document.getElementById('clearBtn').style.display = 'block';
+            document.getElementById('submitBtn').textContent = '🔄 更新作品';
+
+            // 1.5秒后返回首页
+            setTimeout(() => {
+                navigateTo('home');
+            }, 1500);
+        }
+
+        // 清除当前学生的提交记录
+        function clearCurrentSubmission() {
+            if (!currentStudentId) return;
+            if (confirm('确定要删除你（学号：' + currentStudentId + '）的提交记录吗？此操作不可恢复。')) {
+                deleteSubmissionByStudentId(currentStudentId);
+                currentImageBase64 = '';
+                resetUploadZone();
+                document.getElementById('groupName').value = '';
+                document.getElementById('taskDesc').value = '';
+                document.getElementById('submitBtn').textContent = '✅ 提交作品';
+                document.getElementById('clearBtn').style.display = 'none';
+                showToast('提交记录已清除', 'success');
+            }
+        }
+
+        // ==================== 教师登录 ====================
+        function teacherLogin() {
+            const account = document.getElementById('teacherAccount').value.trim();
+            const password = document.getElementById('teacherPassword').value.trim();
+
+            if (!account || !password) {
+                showToast('请输入账号和密码', 'error');
+                return;
+            }
+            if (account === TEACHER_ACCOUNT && password === TEACHER_PASSWORD) {
+                showToast('登录成功！欢迎老师 👋', 'success');
+                setTimeout(() => {
+                    navigateTo('teacher-dashboard');
+                }, 600);
+            } else {
+                showToast('账号或密码错误，请重试', 'error');
+            }
+        }
+
+        // 教师登录页面回车键登录
+        document.getElementById('teacherPassword').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                teacherLogin();
+            }
+        });
+        document.getElementById('studentId').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                studentLogin();
+            }
+        });
+
+        // ==================== 渲染分组列表 ====================
+        function renderGroupList() {
+            const groups = getAllGroups();
+            const container = document.getElementById('groupListContainer');
+
+            if (groups.length === 0) {
+                container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">📭</div>
+                                <p>暂无学生提交作品</p>
+                                <p style="font-size:12px;color:#94a3b8;">等待学生上传后这里将显示分组</p>
+                            </div>
+                        `;
+                return;
+            }
+
+            const avatarColors = ['#F59E0B', '#3B82F6', '#10B981', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6',
+            '#F97316'];
+            let html = '';
+            groups.forEach((group, index) => {
+                const submissions = getSubmissionsByGroup(group);
+                const color = avatarColors[index % avatarColors.length];
+                const avatarLetter = group.replace('第', '').replace('组', '').charAt(0) || '?';
+                html += `
+                            <div class="group-item" onclick="openGroupDetail('${escapeHTML(group)}')">
+                                <div class="group-info">
+                                    <div class="group-avatar" style="background:${color};">${avatarLetter}</div>
+                                    <div>
+                                        <div class="group-name">${escapeHTML(group)}</div>
+                                        <div class="group-count">📄 ${submissions.length} 份作品</div>
+                                    </div>
+                                </div>
+                                <span class="arrow">›</span>
+                            </div>
+                        `;
+            });
+            container.innerHTML = html;
+        }
+
+        function openGroupDetail(groupName) {
+            currentViewGroup = groupName;
+            navigateTo('teacher-group');
+        }
+
+        // ==================== 渲染分组详情 ====================
+        function renderGroupDetail() {
+            document.getElementById('groupDetailTitle').textContent = '📁 ' + currentViewGroup;
+            const submissions = getSubmissionsByGroup(currentViewGroup);
+            document.getElementById('groupDetailSubtitle').textContent = '共 ' + submissions.length + ' 份作品';
+            const container = document.getElementById('groupSubmissionsContainer');
+
+            if (submissions.length === 0) {
+                container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">📭</div>
+                                <p>该分组暂无作品</p>
+                            </div>
+                        `;
+                return;
+            }
+
+            let html = '';
+            submissions.forEach((sub, index) => {
+                const timeStr = new Date(sub.timestamp).toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const hasComment = sub.teacherComment && sub.teacherComment.trim();
+                html += `
+                            <div class="submission-card" style="margin-bottom:12px;">
+                                <span class="student-badge">🎓 学号：${escapeHTML(sub.studentId)}</span>
+                                <span style="font-size:11px;color:var(--text-light);margin-left:6px;">${timeStr}</span>
+                                <div class="description">${escapeHTML(sub.task1Description)}</div>
+                                ${sub.task1Image ? `
+                                    <img class="submission-image" 
+                                         src="${sub.task1Image}" 
+                                         alt="作品图片" 
+                                         onclick="openImageModal(this.src)"
+                                         loading="lazy">
+                                ` : '<p style="font-size:12px;color:#94a3b8;">暂无图片</p>'}
+                                ${hasComment ? `
+                                    <div class="comment-box">
+                                        <span class="comment-icon">💬</span>
+                                        <span>教师评价：${escapeHTML(sub.teacherComment)}</span>
+                                    </div>
+                                ` : ''}
+                                <div class="teacher-comment-input">
+                                    <input type="text" 
+                                           id="commentInput_${sub.id}" 
+                                           placeholder="${hasComment ? '修改评价...' : '输入教师评价...'}" 
+                                           value="${escapeHTML(sub.teacherComment || '')}">
+                                    <button class="btn btn-sm btn-teacher" 
+                                            onclick="saveTeacherComment('${sub.id}')" 
+                                            style="width:auto;padding:8px 14px;font-size:12px;">
+                                        💾 保存
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+            });
+            container.innerHTML = html;
+        }
+
+        function saveTeacherComment(submissionId) {
+            const input = document.getElementById('commentInput_' + submissionId);
+            if (!input) return;
+            const comment = input.value.trim();
+            const submissions = getSubmissions();
+            const target = submissions.find(s => s.id === submissionId);
+            if (target) {
+                target.teacherComment = comment;
+                saveSubmissions(submissions);
+                showToast('评价已保存 ✅', 'success');
+                // 重新渲染
+                setTimeout(() => renderGroupDetail(), 300);
+            }
+        }
+
+        // ==================== 重置数据 ====================
+        function resetAllData() {
+            if (confirm('确定要清除所有提交记录和评价数据吗？此操作不可恢复！')) {
+                localStorage.removeItem(STORAGE_KEY);
+                currentImageBase64 = '';
+                resetUploadZone();
+                showToast('所有数据已重置', 'success');
+                setTimeout(() => {
+                    seedDemoData();
+                    navigateTo('teacher-dashboard');
+                }, 500);
+            }
+        }
+
+        // ==================== 辅助函数 ====================
+        function escapeHTML(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ==================== 键盘导航 ====================
+        document.addEventListener('keydown', function(e) {
+            // 在教师登录页回车登录
+            if (document.getElementById('page-teacher-login').classList.contains('active')) {
+                if (e.key === 'Enter' && document.activeElement === document.getElementById('teacherPassword')) {
+                    teacherLogin();
+                }
+            }
+            // 在学生登录页回车登录
+            if (document.getElementById('page-student-login').classList.contains('active')) {
+                if (e.key === 'Enter' && document.activeElement === document.getElementById('studentId')) {
+                    studentLogin();
+                }
+            }
+        });
+
+        // ==================== 初始化 ====================
+        function init() {
+            // 填充演示数据
+            seedDemoData();
+            // 默认显示首页
+            navigateTo('home');
+            console.log('✅ 课堂作品上传系统已就绪');
+            console.log('👨‍🏫 教师账号：admin | 密码：123456');
+            console.log('🎒 学生可使用任意学号登录（如：20240101）');
+            console.log('📦 数据存储在浏览器 localStorage 中');
+            console.log('🖼️ 演示数据已加载（不含图片），学生上传真实图片后即可查看');
+        }
+
+        // 启动应用
+        init();
+    </script>
+</body>
+</html>
